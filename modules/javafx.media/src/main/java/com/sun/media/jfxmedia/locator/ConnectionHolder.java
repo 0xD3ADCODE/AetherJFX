@@ -54,16 +54,16 @@ public abstract class ConnectionHolder {
         return new MemoryConnectionHolder(buffer);
     }
 
-    static ConnectionHolder createURIConnectionHolder(URI uri, Map<String,Object> connectionProperties) throws IOException {
-        return new URIConnectionHolder(uri, connectionProperties);
+    static ConnectionHolder createURIConnectionHolder(URI uri, Map<String, String> headers) throws IOException {
+        return new URIConnectionHolder(uri, headers);
     }
 
     static ConnectionHolder createFileConnectionHolder(URI uri) throws IOException {
         return new FileConnectionHolder(uri);
     }
 
-    static ConnectionHolder createHLSConnectionHolder(URI uri) {
-        return new HLSConnectionHolder(uri);
+    static ConnectionHolder createHLSConnectionHolder(URI uri, Map<String, String> headers) {
+        return new HLSConnectionHolder(uri, headers);
     }
 
     /**
@@ -238,15 +238,12 @@ public abstract class ConnectionHolder {
         private URI                 uri;
         private URLConnection       urlConnection;
 
-        URIConnectionHolder(URI uri, Map<String,Object> connectionProperties) throws IOException {
+        URIConnectionHolder(URI uri, Map<String,String> connectionProperties) throws IOException {
             this.uri = uri;
             urlConnection = uri.toURL().openConnection();
             if (connectionProperties != null) {
-                for(Map.Entry<String,Object> entry : connectionProperties.entrySet()) {
-                    Object value = entry.getValue();
-                    if (value instanceof String) {
-                        urlConnection.setRequestProperty(entry.getKey(), (String)value);
-                    }
+                for(Map.Entry<String,String> entry : connectionProperties.entrySet()) {
+                    urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
                 }
             }
             channel = openChannel(null);

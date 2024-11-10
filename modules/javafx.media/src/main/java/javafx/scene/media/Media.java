@@ -374,6 +374,51 @@ public final class Media {
      * (type {@link MediaException.Type#MEDIA_UNSUPPORTED}).
      */
     public Media(@NamedArg("source") String source) {
+        this(source, null);
+    }
+
+    /**
+     * Constructs a <code>Media</code> instance.  This is the only way to
+     * specify the media source. The source must represent a valid <code>URI</code>
+     * and is immutable. Only HTTP, HTTPS, FILE, and JAR <code>URL</code>s are supported. If the
+     * provided URL is invalid then an exception will be thrown.  If an
+     * asynchronous error occurs, the {@link #errorProperty error} property will be set. Listen
+     * to this property to be notified of any such errors.
+     *
+     * <p>If the source uses a non-blocking protocol such as FILE, then any
+     * problems which can be detected immediately will cause a <code>MediaException</code>
+     * to be thrown. Such problems include the media being inaccessible or in an
+     * unsupported format. If however a potentially blocking protocol such as
+     * HTTP is used, then the connection will be initialized asynchronously so
+     * that these sorts of errors will be signaled by setting the {@link #errorProperty error}
+     * property.</p>
+     *
+     * <p>Constraints:
+     * <ul>
+     * <li>The supplied URI must conform to RFC-2396 as required by
+     * <A href="https://docs.oracle.com/javase/8/docs/api/java/net/URI.html">java.net.URI</A>.</li>
+     * <li>Only HTTP, HTTPS, FILE, and JAR URIs are supported.</li>
+     * </ul>
+     *
+     * <p>See <A href="https://docs.oracle.com/javase/8/docs/api/java/net/URI.html">java.net.URI</A>
+     * for more information about URI formatting in general.
+     * JAR URL syntax is specified in <a href="https://docs.oracle.com/javase/8/docs/api/java/net/JarURLConnection.html">java.net.JarURLConnection</A>.
+     *
+     * @param source The URI of the source media.
+     * @param headers map with HTTP headers for media URI. May be null
+     * @throws NullPointerException if the URI string is <code>null</code>.
+     * @throws IllegalArgumentException if the URI string does not conform to RFC-2396
+     * or, if appropriate, the Jar URL specification, or is in a non-compliant
+     * form which cannot be modified to a compliant form.
+     * @throws IllegalArgumentException if the URI string has a <code>null</code>
+     * scheme.
+     * @throws UnsupportedOperationException if the protocol specified for the
+     * source is not supported.
+     * @throws MediaException if the media source cannot be connected
+     * (type {@link MediaException.Type#MEDIA_INACCESSIBLE}) or is not supported
+     * (type {@link MediaException.Type#MEDIA_UNSUPPORTED}).
+     */
+    public Media(@NamedArg("source") String source, @NamedArg("headers") Map<String, String> headers) {
         this.source = source;
 
         URI uri = null;
@@ -391,6 +436,9 @@ public final class Media {
         try {
             locator = new com.sun.media.jfxmedia.locator.Locator(uri);
             jfxLocator = locator;
+            if (headers != null) {
+                headers.forEach(jfxLocator::setConnectionProperty);
+            }
             if (locator.canBlock()) {
                 InitLocator locatorInit = new InitLocator();
                 Thread t = new Thread(locatorInit);

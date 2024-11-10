@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -59,6 +60,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
     private final PlaylistLoader playlistLoader;
     private VariantPlaylist variantPlaylist = null;
     private Playlist currentPlaylist = null;
+    private Map<String, String> headers;
     // If set we need to switch to new current playlist.
     // Used by audio ext streams when switching bitrates.
     private Playlist newCurrentPlaylist = null;
@@ -88,7 +90,8 @@ final class HLSConnectionHolder extends ConnectionHolder {
     static final String CHARSET_UTF_8 = "UTF-8";
     static final String CHARSET_US_ASCII = "US-ASCII";
 
-    HLSConnectionHolder(URI uri) {
+    HLSConnectionHolder(URI uri, Map<String, String> headers) {
+        this.headers = headers;
         playlistLoader = new PlaylistLoader();
         playlistLoader.setPlaylistURI(uri);
         init();
@@ -363,6 +366,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
             try {
                 URI uri = new URI(mediaFile);
                 headerConnection = uri.toURL().openConnection();
+                addConnectionProperties(headerConnection, headers);
                 headerChannel = openHeaderChannel();
                 headerLength = headerConnection.getContentLength();
             } catch (IOException | URISyntaxException e) {
@@ -382,6 +386,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
         try {
             URI uri = new URI(mediaFile);
             urlConnection = uri.toURL().openConnection();
+            addConnectionProperties(urlConnection, headers);
             channel = openChannel();
         } catch (IOException | URISyntaxException e) {
             return -1;
@@ -408,7 +413,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
         Playlist playlist = variantPlaylist.getPlaylistBasedOnBitrate(avgBitrate);
         if (playlist != null && playlist != currentPlaylist) {
             if (currentPlaylist.isLive()) {
-                playlist.update(currentPlaylist.getNextMediaFile());
+                playlist.update(currentPlaylist.getNextMediaFile(), headers);
                 playlistLoader.setReloadPlaylist(playlist);
             }
 
@@ -436,7 +441,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
         synchronized (newPlaylistLock) {
             if (newCurrentPlaylist != null && newCurrentPlaylist != currentPlaylist) {
                 if (currentPlaylist.isLive()) {
-                    newCurrentPlaylist.update(currentPlaylist.getNextMediaFile());
+                    newCurrentPlaylist.update(currentPlaylist.getNextMediaFile(), headers);
                     playlistLoader.setReloadAudioExtPlaylist(newCurrentPlaylist);
                 }
 
@@ -462,11 +467,19 @@ final class HLSConnectionHolder extends ConnectionHolder {
         return mediaFile;
     }
 
+    private static void addConnectionProperties(URLConnection connection, Map<String, String> headers) {
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
     Playlist getCurrentPlaylist() {
         return currentPlaylist;
     }
 
-    private static class PlaylistLoader extends Thread {
+    private class PlaylistLoader extends Thread {
 
         public static final int STATE_INIT = 0;
         public static final int STATE_EXIT = 1;
@@ -558,7 +571,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
 
             try {
                 PlaylistParser parser = new PlaylistParser();
-                parser.load(playlistURI);
+                parser.load(playlistURI, headers);
 
                 if (parser.getVariantPlaylistOrNull() != null) {
                     variantPlaylist = parser.getVariantPlaylistOrNull();
@@ -572,7 +585,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
                     // Load playlists (EXT-X-STREAM-INF) inside variant playlist if needed
                     variantPlaylist.getExtStreamInf().forEach((ExtStreamInf ext) -> {
                         Playlist playlist = new Playlist(ext.getPlaylistURI());
-                        playlist.update(null);
+                        playlist.update(null, headers);
                         playlist.setAudioGroupID(ext.getAudioGroupID());
                         ext.setPlaylist(playlist);
                     });
@@ -598,7 +611,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
                         Playlist playlist = new Playlist(ext.getPlaylistURI());
                         playlist.setIsVideoStreamFragmentedMP4(isVideoStreamFragmentedMP4);
                         playlist.setVideoStreamTargetDuration(videoStreamTargetDuration);
-                        playlist.update(null);
+                        playlist.update(null, headers);
                         ext.setPlaylist(playlist);
                     });
                     variantPlaylist.validateAudioExtMedia();
@@ -637,9 +650,9 @@ final class HLSConnectionHolder extends ConnectionHolder {
             }
 
             synchronized (reloadLock) {
-                reloadPlaylist.update(null);
+                reloadPlaylist.update(null, headers);
                 if (reloadAudioExtPlaylist != null) {
-                    reloadAudioExtPlaylist.update(null);
+                    reloadAudioExtPlaylist.update(null, headers);
                 }
             }
 
@@ -665,13 +678,14 @@ final class HLSConnectionHolder extends ConnectionHolder {
         private final String TAG_PARAM_AUDIO = "AUDIO";
         private final String TAG_VALUE_YES = "YES";
 
-        void load(URI uri) {
+        void load(URI uri, Map<String, String> headers) {
             playlistURI = uri;
 
             HttpURLConnection connection = null;
             BufferedReader reader = null;
             try {
                 connection = (HttpURLConnection) uri.toURL().openConnection();
+                addConnectionProperties(connection, headers);
                 connection.setRequestMethod("GET");
 
                 if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -1206,10 +1220,10 @@ final class HLSConnectionHolder extends ConnectionHolder {
             playlistURI = uri;
         }
 
-        void update(String nextMediaFile) {
+        void update(String nextMediaFile, Map<String, String> headers) {
             PlaylistParser parser = new PlaylistParser();
             parser.setPlaylist(this);
-            parser.load(playlistURI);
+            parser.load(playlistURI, headers);
 
             isLive = parser.isLivePlaylist();
             if (isLive) {
@@ -1265,7 +1279,7 @@ final class HLSConnectionHolder extends ConnectionHolder {
             synchronized (lock) {
 
                 if (needBaseURI) {
-                    setBaseURI(playlistURI.toString(), URI);
+                    setBaseURI(playlistURI.toString());
                 }
 
                 if (isLive) {

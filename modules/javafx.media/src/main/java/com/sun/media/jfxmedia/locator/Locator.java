@@ -88,7 +88,7 @@ public class Locator {
      * significance of the properties depends on the URI protocol and type of
      * media source.
      */
-    private Map<String, Object> connectionProperties;
+    private Map<String, String> connectionProperties;
     /**
      * Mutex for connectionProperties;
      */
@@ -586,7 +586,7 @@ public class Locator {
      * @param property The name of the property.
      * @param value The value of the property.
      */
-    public void setConnectionProperty(String property, Object value) {
+    public void setConnectionProperty(String property, String value) {
         synchronized (propertyLock) {
             if (connectionProperties == null) {
                 connectionProperties = new TreeMap<>();
@@ -616,13 +616,13 @@ public class Locator {
         String uriPath = uri.getPath();
         if (uriPath != null && (uriPath.endsWith(".m3u8") ||
                                 uriPath.endsWith(".m3u"))) {
-            return ConnectionHolder.createHLSConnectionHolder(uri);
+            return ConnectionHolder.createHLSConnectionHolder(uri, connectionProperties);
         }
 
         String type = getContentType(); // Should be ready by now
         if (type != null && (type.equals(MediaUtils.CONTENT_TYPE_M3U8) ||
                              type.equals(MediaUtils.CONTENT_TYPE_M3U))) {
-            return ConnectionHolder.createHLSConnectionHolder(uri);
+            return ConnectionHolder.createHLSConnectionHolder(uri, connectionProperties);
         }
 
         // media file over http/https
