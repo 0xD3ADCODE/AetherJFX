@@ -189,7 +189,7 @@ public final class DumpRenderTree {
     private static void mlog(String msg) {
         if (log.isLoggable(Level.FINE)) {
             log.fine("PID:" + Long.toHexString(PID)
-                    + " TID:" + Thread.currentThread().threadId()
+                    + " TID:" + Thread.currentThread().getId()
                         + "(" + Thread.currentThread().getName() + ") "
                     + msg);
         }
