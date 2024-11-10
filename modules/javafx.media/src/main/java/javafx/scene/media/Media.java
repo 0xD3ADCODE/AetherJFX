@@ -438,7 +438,7 @@ public final class Media {
      * Locator used by the jfxmedia player, MediaPlayer needs access to this
      */
     private final Locator jfxLocator;
-    Locator retrieveJfxLocator() {
+    public Locator retrieveJfxLocator() {
         return jfxLocator;
     }
 
