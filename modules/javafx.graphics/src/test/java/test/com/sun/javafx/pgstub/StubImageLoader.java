@@ -28,8 +28,11 @@ package test.com.sun.javafx.pgstub;
 import com.sun.javafx.tk.ImageLoader;
 import com.sun.javafx.tk.PlatformImage;
 
+import java.util.Map;
+
 public final class StubImageLoader implements ImageLoader {
     private final Object source;
+    private final Map<String, String> headers;
 
     private final StubPlatformImageInfo imageInfo;
     private final double loadWidth;
@@ -40,12 +43,14 @@ public final class StubImageLoader implements ImageLoader {
     private final PlatformImage[] frames;
 
     public StubImageLoader(final Object source,
+                           final Map<String, String> headers,
                            final StubPlatformImageInfo imageInfo,
                            final double loadWidth,
                            final double loadHeight,
                            final boolean preserveRatio,
                            final boolean smooth) {
         this.source = source;
+        this.headers = headers;
 
         this.imageInfo = imageInfo;
         this.loadWidth = loadWidth;
@@ -61,6 +66,10 @@ public final class StubImageLoader implements ImageLoader {
 
     public Object getSource() {
         return source;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     @Override

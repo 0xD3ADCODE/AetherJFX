@@ -45,6 +45,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -249,9 +250,10 @@ class PrismImageLoader2 implements com.sun.javafx.tk.ImageLoader {
         public AsyncImageLoader(
                 AsyncOperationListener<PrismImageLoader2> listener,
                 String url,
+                Map<String, String> headers,
                 double width, double height, boolean preserveRatio, boolean smooth)
         {
-            super(url, listener);
+            super(url, headers, listener);
             this.width = width;
             this.height = height;
             this.preserveRatio = preserveRatio;

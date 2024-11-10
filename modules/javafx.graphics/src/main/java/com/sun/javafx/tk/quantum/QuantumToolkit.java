@@ -816,9 +816,9 @@ public final class QuantumToolkit extends Toolkit {
     }
 
     @Override public AbstractRemoteResource<? extends ImageLoader> loadImageAsync(
-            AsyncOperationListener listener, String url,
+            AsyncOperationListener<? extends ImageLoader> listener, String url, Map<String, String> headers,
             double width, double height, boolean preserveRatio, boolean smooth) {
-        return new PrismImageLoader2.AsyncImageLoader(listener, url, width, height, preserveRatio, smooth);
+        return new PrismImageLoader2.AsyncImageLoader((AsyncOperationListener<PrismImageLoader2>) listener, url, headers, width, height, preserveRatio, smooth);
     }
 
     // Note that this method should only be called by PlatformImpl.runLater

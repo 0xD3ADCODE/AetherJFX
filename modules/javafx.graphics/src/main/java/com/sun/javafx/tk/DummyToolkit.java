@@ -132,7 +132,7 @@ final public class DummyToolkit extends Toolkit {
     }
 
     @Override
-    public AsyncOperation loadImageAsync(AsyncOperationListener<? extends ImageLoader> listener, String url, double width, double height, boolean preserveRatio, boolean smooth) {
+    public AsyncOperation loadImageAsync(AsyncOperationListener<? extends ImageLoader> listener, String url, Map<String, String> headers, double width, double height, boolean preserveRatio, boolean smooth) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

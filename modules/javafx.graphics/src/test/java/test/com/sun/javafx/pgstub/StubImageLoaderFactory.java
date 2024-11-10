@@ -98,6 +98,7 @@ public final class StubImageLoaderFactory {
     }
 
     public ImageLoader createImageLoader(final Object source,
+                                         final Map<String, String> headers,
                                          final double loadWidth,
                                          final double loadHeight,
                                          final boolean preserveRatio,
@@ -107,16 +108,16 @@ public final class StubImageLoaderFactory {
             return ERROR_IMAGE_LOADER;
         }
 
-        return new StubImageLoader(source, imageInfo, loadWidth, loadHeight,
+        return new StubImageLoader(source, headers, imageInfo, loadWidth, loadHeight,
                                    preserveRatio, smooth);
     }
 
     public AsyncOperation createAsyncImageLoader(
             final AsyncOperationListener listener,
-            final String url, final double loadWidth, final double loadHeight,
+            final String url, final Map<String, String> headers, final double loadWidth, final double loadHeight,
             final boolean preserveRatio, final boolean smooth) {
         final ImageLoader imageLoader =
-                createImageLoader(url, loadWidth, loadHeight,
+                createImageLoader(url, headers, loadWidth, loadHeight,
                                   preserveRatio, smooth);
         final StubAsyncImageLoader asyncLoader =
                 new StubAsyncImageLoader(imageLoader, listener);

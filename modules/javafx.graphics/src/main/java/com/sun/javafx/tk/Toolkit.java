@@ -571,6 +571,7 @@ public abstract class Toolkit {
     public abstract AsyncOperation loadImageAsync(
                                           AsyncOperationListener<? extends ImageLoader> listener,
                                           String url,
+                                          Map<String, String> headers,
                                           double width, double height,
                                           boolean preserveRatio,
                                           boolean smooth);

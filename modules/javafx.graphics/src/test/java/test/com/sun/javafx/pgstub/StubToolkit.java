@@ -568,28 +568,28 @@ public class StubToolkit extends Toolkit {
     @Override
     public ImageLoader loadImage(String url, double width, double height,
             boolean preserveRatio, boolean smooth) {
-        return imageLoaderFactory.createImageLoader(url, width, height,
+        return imageLoaderFactory.createImageLoader(url, null, width, height,
                                                     preserveRatio, smooth);
     }
 
     @Override
     public ImageLoader loadImage(InputStream stream, double width, double height,
             boolean preserveRatio, boolean smooth) {
-        return imageLoaderFactory.createImageLoader(stream, width, height,
+        return imageLoaderFactory.createImageLoader(stream, null, width, height,
                                                     preserveRatio, smooth);
     }
 
     @Override
-    public AsyncOperation loadImageAsync(
-            AsyncOperationListener listener, String url, double width, double height,
-            boolean preserveRatio, boolean smooth) {
+    public AsyncOperation loadImageAsync(AsyncOperationListener<? extends ImageLoader> listener, String url,
+                                         Map<String, String> headers, double width, double height,
+                                         boolean preserveRatio, boolean smooth) {
         return imageLoaderFactory.createAsyncImageLoader(
-                listener, url, width, height, preserveRatio, smooth);
+                listener, url, headers, width, height, preserveRatio, smooth);
     }
 
     @Override
     public ImageLoader loadPlatformImage(Object platformImage) {
-        return imageLoaderFactory.createImageLoader(platformImage,
+        return imageLoaderFactory.createImageLoader(platformImage, null,
                                                     0, 0, false, false);
     }
 

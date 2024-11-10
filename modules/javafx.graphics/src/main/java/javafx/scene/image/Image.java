@@ -33,6 +33,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Pattern;
@@ -178,6 +179,13 @@ public class Image {
     private final String url;
 
     /**
+     * Map with HTTP headers for image loading
+     *
+     * @defaultValue null
+     */
+    private final Map<String, String> headers;
+
+    /**
      * Returns the url used to fetch the pixel data contained in the Image instance,
      * if specified in the constructor. If no url is provided in the constructor (for
      * instance, if the Image is constructed from an
@@ -189,6 +197,18 @@ public class Image {
      */
     public final String getUrl() {
         return url;
+    }
+
+    /**
+     * Returns Map with HTTP headers for URL used to fetch the pixel data for this
+     * Image instance
+     *
+     * @return a Map with HTTP headers for URL used to fetch the pixel data for this
+     *      Image instance. Mau be null
+     * @since 23-extended
+     */
+    public final Map<String, String> getHeaders() {
+        return headers;
     }
 
     private final InputStream inputSource;
@@ -691,7 +711,39 @@ public class Image {
             @NamedArg("preserveRatio") boolean preserveRatio,
             @NamedArg(value="smooth", defaultValue="true") boolean smooth,
             @NamedArg("backgroundLoading") boolean backgroundLoading) {
-        this(validateUrl(url), null, requestedWidth, requestedHeight,
+        this(validateUrl(url), null, null, requestedWidth, requestedHeight,
+                preserveRatio, smooth, backgroundLoading);
+        initialize(null);
+    }
+
+    /**
+     * Constructs an {@code Image} with content loaded from the specified URL
+     * using the specified parameters.
+     *
+     * @param url a resource path, file path, or URL
+     * @param headers map with HTTP headers for requested URL. May be null
+     * @param requestedWidth the image's bounding box width
+     * @param requestedHeight the image's bounding box height
+     * @param preserveRatio indicates whether to preserve the aspect ratio of
+     *      the original image when scaling to fit the image within the
+     *      specified bounding box
+     * @param smooth indicates whether to use a better quality filtering
+     *      algorithm or a faster one when scaling this image to fit within
+     *      the specified bounding box
+     * @param backgroundLoading indicates whether the image
+     *      is being loaded in the background
+     * @throws NullPointerException if {@code url} is null
+     * @throws IllegalArgumentException if {@code url} is invalid or unsupported
+     */
+    public Image(
+            @NamedArg(value="url", defaultValue="\"\"") String url,
+            @NamedArg(value="headers", defaultValue="null") Map<String, String> headers,
+            @NamedArg("requestedWidth") double requestedWidth,
+            @NamedArg("requestedHeight") double requestedHeight,
+            @NamedArg("preserveRatio") boolean preserveRatio,
+            @NamedArg(value="smooth", defaultValue="true") boolean smooth,
+            @NamedArg("backgroundLoading") boolean backgroundLoading) {
+        this(validateUrl(url), headers, null, requestedWidth, requestedHeight,
              preserveRatio, smooth, backgroundLoading);
         initialize(null);
     }
@@ -704,7 +756,7 @@ public class Image {
      * @throws NullPointerException if input stream is null
      */
     public Image(@NamedArg("is") InputStream is) {
-        this(null, validateInputStream(is), 0, 0, false, false, false);
+        this(null, null, validateInputStream(is), 0, 0, false, false, false);
         initialize(null);
     }
 
@@ -724,7 +776,7 @@ public class Image {
      */
     public Image(@NamedArg("is") InputStream is, @NamedArg("requestedWidth") double requestedWidth, @NamedArg("requestedHeight") double requestedHeight,
                  @NamedArg("preserveRatio") boolean preserveRatio, @NamedArg("smooth") boolean smooth) {
-        this(null, validateInputStream(is), requestedWidth, requestedHeight,
+        this(null, null, validateInputStream(is), requestedWidth, requestedHeight,
              preserveRatio, smooth, false);
         initialize(null);
     }
@@ -738,7 +790,7 @@ public class Image {
      * @throws IllegalArgumentException if either dimension is negative or zero.
      */
     Image(int width, int height) {
-        this(null, null, width, height, false, false, false);
+        this(null, null, null, width, height, false, false, false);
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Image dimensions must be positive (w,h > 0)");
         }
@@ -751,21 +803,23 @@ public class Image {
      * @param pixelBuffer the {@code PixelBuffer} used to construct this image.
      */
     Image(PixelBuffer pixelBuffer) {
-        this(null, null, pixelBuffer.getWidth(), pixelBuffer.getHeight(),
+        this(null, null, null, pixelBuffer.getWidth(), pixelBuffer.getHeight(),
                 false, false, false);
         initialize(pixelBuffer); // Creates an image using the java.nio.Buffer provided by PixelBuffer.
     }
 
     private Image(Object externalImage) {
-        this(null, null, 0, 0, false, false, false);
+        this(null, null, null, 0, 0, false, false, false);
         initialize(externalImage);
     }
 
-    private Image(String url, InputStream is,
+    private Image(String url, Map<String, String> headers,
+                  InputStream is,
                   double requestedWidth, double requestedHeight,
                   boolean preserveRatio, boolean smooth,
                   boolean backgroundLoading) {
         this.url = url;
+        this.headers = headers;
         this.inputSource = is;
         this.requestedWidth = requestedWidth;
         this.requestedHeight = requestedHeight;
@@ -1063,7 +1117,7 @@ public class Image {
         }
 
         private AsyncOperation constructPeer() {
-            return loadImageAsync(this, url,
+            return loadImageAsync(this, url, headers,
                                   requestedWidth, requestedHeight,
                                   preserveRatio, smooth);
         }
@@ -1087,9 +1141,10 @@ public class Image {
 
     private static AsyncOperation loadImageAsync(
             AsyncOperationListener<? extends ImageLoader> listener,
-            String url, double width, double height,
+            String url, Map<String, String> headers,
+            double width, double height,
             boolean preserveRatio, boolean smooth) {
-        return Toolkit.getToolkit().loadImageAsync(listener, url,
+        return Toolkit.getToolkit().loadImageAsync(listener, url, headers,
                                                    width, height,
                                                    preserveRatio, smooth);
     }

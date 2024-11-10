@@ -45,25 +45,25 @@ import java.util.Map;
  *
  */
 public abstract class AbstractRemoteResource<T> extends AbstractAsyncOperation<T> {
-
     protected final String url;
     protected final String method;
     protected final String outboundContent;
     protected int fileSize;
-    private Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> headers;
     private Map<String, List<String>> responseHeaders = new HashMap<>();
 
-    protected AbstractRemoteResource(String url, AsyncOperationListener<T> listener) {
-        this(url, "GET", listener);
+    protected AbstractRemoteResource(String url, Map<String, String> headers, AsyncOperationListener<T> listener) {
+        this(url, "GET", headers, listener);
     }
 
-    protected AbstractRemoteResource(String url, String method, AsyncOperationListener<T> listener) {
-        this(url, method, null, listener);
+    protected AbstractRemoteResource(String url, String method, Map<String, String> headers, AsyncOperationListener<T> listener) {
+        this(url, method, headers, null, listener);
     }
 
-    protected AbstractRemoteResource(String url, String method, String outboundContent, AsyncOperationListener<T> listener) {
+    protected AbstractRemoteResource(String url, String method, Map<String, String> headers, String outboundContent, AsyncOperationListener<T> listener) {
         super(listener);
         this.url = url;
+        this.headers = headers != null ? headers : new HashMap<>();
         this.method = method;
         this.outboundContent = outboundContent;
     }
