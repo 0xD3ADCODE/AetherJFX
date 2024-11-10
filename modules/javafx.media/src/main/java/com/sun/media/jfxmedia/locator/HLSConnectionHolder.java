@@ -1341,28 +1341,29 @@ final class HLSConnectionHolder extends ConnectionHolder {
             synchronized (lock) {
                 mediaFileIndex++;
                 if (mediaFileIndex < mediaFiles.size()) {
-                    if (baseURI != null) {
-                        return baseURI + mediaFiles.get(mediaFileIndex);
-                    } else {
-                        return mediaFiles.get(mediaFileIndex);
-                    }
+                    return getMediaFile(mediaFileIndex);
                 } else {
                     return null;
                 }
             }
         }
 
-        String getHeaderFile() {
+        private String getHeaderFile() {
             synchronized (lock) {
                 if (mediaFiles.size() > 0) {
-                    if (baseURI != null) {
-                        return baseURI + mediaFiles.get(0);
-                    } else {
-                        return mediaFiles.get(0);
-                    }
+                    return getMediaFile(0);
                 } else {
                     return null;
                 }
+            }
+        }
+
+        private String getMediaFile(int index) {
+            String mediaFile = mediaFiles.get(index);
+            if (!mediaFile.startsWith("http://") && !mediaFile.startsWith("https://") && baseURI != null) {
+                return baseURI + mediaFile;
+            } else {
+                return mediaFile;
             }
         }
 
@@ -1574,10 +1575,8 @@ final class HLSConnectionHolder extends ConnectionHolder {
             }
         }
 
-        private void setBaseURI(String playlistURI, String URI) {
-            if (!URI.startsWith("http://") && !URI.startsWith("https://")) {
-                baseURI = playlistURI.substring(0, playlistURI.lastIndexOf("/") + 1);
-            }
+        private void setBaseURI(String playlistURI) {
+            baseURI = playlistURI.substring(0, playlistURI.lastIndexOf("/") + 1);
             needBaseURI = false;
         }
 
