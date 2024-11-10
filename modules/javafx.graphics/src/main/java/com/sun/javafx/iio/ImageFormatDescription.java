@@ -68,24 +68,34 @@ public interface ImageFormatDescription {
      * Represents a sequences of bytes which can appear at the beginning of
      * the stream of an image stored in this format.
      */
-    public final class Signature {
+    public class Signature {
         private final byte[] bytes;
+        private final int skipBytes;
 
         public Signature(final byte... bytes) {
             this.bytes = bytes;
+            this.skipBytes = 0;
         }
 
-        public int getLength() {
-            return bytes.length;
+        public Signature(int skipBytes, final byte... bytes) {
+            this.bytes = bytes;
+            this.skipBytes = skipBytes;
+        }
+
+        public int getMaxLength() {
+            return bytes.length + skipBytes;
         }
 
         public boolean matches(final byte[] streamBytes) {
-            if (streamBytes.length < bytes.length) {
+            if (streamBytes.length < getMaxLength()) {
                 return false;
             }
 
-            for (int i = 0; i < bytes.length; i++) {
-                if (streamBytes[i] != bytes[i]) {
+            for (int i = 0; i < getMaxLength(); i++) {
+                if (i < skipBytes) {
+                    continue;
+                }
+                if (streamBytes[i] != bytes[i - skipBytes]) {
                     return false;
                 }
             }

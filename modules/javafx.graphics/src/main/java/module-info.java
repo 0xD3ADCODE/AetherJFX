@@ -52,6 +52,7 @@ module javafx.graphics {
     exports javafx.css;
     exports javafx.css.converter;
     exports javafx.geometry;
+    exports javafx.iio;
     exports javafx.print;
     exports javafx.scene;
     exports javafx.scene.canvas;

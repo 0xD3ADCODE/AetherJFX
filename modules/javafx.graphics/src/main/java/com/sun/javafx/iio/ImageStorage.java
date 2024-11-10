@@ -418,7 +418,7 @@ public class ImageStorage {
             maxSignatureLength = 0;
             for (final Signature signature:
                     loaderFactoriesBySignature.keySet()) {
-                final int signatureLength = signature.getLength();
+                final int signatureLength = signature.getMaxLength();
                 if (maxSignatureLength < signatureLength) {
                     maxSignatureLength = signatureLength;
                 }
